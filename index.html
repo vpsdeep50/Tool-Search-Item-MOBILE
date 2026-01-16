@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NRO MOBILE TOOL FIX</title>
+    <title>Item Search Mobile - DIRECT SELECT</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { --main: #00ff88; --bg: #0d0d0d; --card: #1a1a1a; }
@@ -11,10 +11,25 @@
         .wrapper { max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 900px) { .wrapper { grid-template-columns: 420px 1fr; } body { padding: 20px; } }
         .panel { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        
         input, select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
+        
+        /* BIẾN DANH SÁCH THÀNH CÁC Ô BẤM TRỰC TIẾP */
+        .list-container { 
+            height: 250px; overflow-y: auto; background: #000; 
+            border: 1px solid #444; border-radius: 8px; margin-bottom: 10px;
+        }
+        .item-row { 
+            padding: 12px; border-bottom: 1px solid #222; cursor: pointer; 
+            font-size: 14px; transition: 0.2s;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-row:active { background: #333; } /* Hiệu ứng khi chạm trên mobile */
+        .item-row.selected { background: var(--main) !important; color: #000; font-weight: bold; }
+
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 8px; }
-        .btn-add { background: var(--main); color: #000; font-size: 16px; }
-        #log { background: #000; color: #00ff41; padding: 12px; height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 14px; margin-top: 10px; }
+        .btn-add { background: var(--main); color: #000; }
+        #log { background: #000; color: #00ff41; padding: 12px; height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 14px; }
         .opt-row { display: grid; grid-template-columns: 2.2fr 1fr; gap: 8px; margin-bottom: 8px; }
         label { font-size: 11px; color: var(--main); text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: bold; }
         .status { text-align: center; color: var(--main); font-weight: bold; margin-bottom: 10px; font-size: 14px; }
@@ -24,22 +39,23 @@
 
 <div class="wrapper">
     <div class="panel">
-        <h2 style="color: var(--main); text-align: center; margin-top: 0;">NRO MOBILE TOOL</h2>
+        <h2 style="color: var(--main); text-align: center; margin-top: 0;">NRO MOBILE PRO</h2>
         <div id="status" class="status">⏳ Đang nạp dữ liệu...</div>
 
         <div id="mainUI">
-            <label>🔍 Tìm kiếm trang bị</label>
-            <input type="text" id="searchItem" placeholder="Gõ tên hoặc ID..." onkeyup="filterItems()">
+            <label>🔍 TÌM KIẾM (GÕ LÀ HIỆN):</label>
+            <input type="text" id="searchItem" placeholder="Gõ tên Áo, Quần, Rada..." oninput="filterItems()">
             
-            <label>📦 Danh sách đồ (Chọn 1 món):</label>
-            <select id="itemList" size="8" style="height: 200px;"></select>
+            <label>📦 CHỌN VẬT PHẨM (CHẠM TRỰC TIẾP):</label>
+            <div id="itemList" class="list-container">
+                </div>
 
-            <label>👕 Set Clothes (Kích hoạt)</label>
+            <label>👕 SET KÍCH HOẠT (NONE NẾU LÀ ĐỒ LẺ):</label>
             <select id="clothesId">
                 <option value="0">-- KHÔNG CHỌN SET (NONE) --</option>
             </select>
 
-            <label>⚙️ Chỉ số Option</label>
+            <label>⚙️ CHỈ SỐ OPTION:</label>
             <div id="optionContainer"></div>
             <button class="btn" style="background: #333; color: #ccc; font-size: 12px; padding: 8px;" onclick="addOptionRow()">+ THÊM DÒNG</button>
             
@@ -51,50 +67,28 @@
     <div class="panel">
         <label>KẾT QUẢ:</label>
         <div id="log"></div>
-        <button onclick="document.getElementById('log').innerText=''" style="width:100%; background:none; border:none; color:#ff4444; font-size:11px; margin-top:10px;">XÓA TẤT CẢ</button>
     </div>
 </div>
 
 <script>
-    let dbItem = []; 
-    let dbOpt = [];
+    let dbItem = []; let dbOpt = []; let selectedItemId = null;
     const GEN_DATA = { "G0 - TRÁI ĐẤT": [139, 140, 141], "G1 - NAMẾC": [142, 143, 144], "G2 - XAYDA": [136, 137, 138] };
 
     window.onload = function() {
-        // Tải item.csv
-        Papa.parse("item.csv", { 
-            download: true, 
-            header: true, 
-            skipEmptyLines: true, 
-            complete: function(res) {
-                dbItem = res.data.map(i => ({
-                    id: getVal(i, ['id', 'ID']),
-                    name: getVal(i, ['name', 'NAME'])
-                })).filter(i => i.id);
-                checkReady();
-            }
-        });
-        // Tải option.csv
-        Papa.parse("option.csv", { 
-            download: true, 
-            header: true, 
-            skipEmptyLines: true, 
-            complete: function(res) {
-                dbOpt = res.data.map(i => ({
-                    id: getVal(i, ['id', 'ID']),
-                    name: getVal(i, ['name', 'NAME'])
-                })).filter(o => o.id);
-                checkReady();
-            }
-        });
+        Papa.parse("item.csv", { download: true, header: true, skipEmptyLines: true, complete: function(res) {
+            dbItem = res.data.map(i => ({ id: getVal(i, ['id', 'ID']), name: getVal(i, ['name', 'NAME']) })).filter(i => i.id);
+            checkReady();
+        }});
+        Papa.parse("option.csv", { download: true, header: true, skipEmptyLines: true, complete: function(res) {
+            dbOpt = res.data.map(i => ({ id: getVal(i, ['id', 'ID']), name: getVal(i, ['name', 'NAME']) })).filter(o => o.id);
+            checkReady();
+        }});
     };
 
     function checkReady() {
         if (dbItem.length > 0 && dbOpt.length > 0) {
             document.getElementById('status').innerText = "✅ ĐÃ NẠP " + dbItem.length + " MÓN";
-            renderClothesMenu(); 
-            renderDefaultOptions(); 
-            filterItems(); // Hiện danh sách ngay khi tải xong
+            renderClothesMenu(); renderDefaultOptions(); filterItems();
         }
     }
 
@@ -109,73 +103,65 @@
     function renderClothesMenu() {
         const select = document.getElementById('clothesId');
         for (let gen in GEN_DATA) {
-            let group = document.createElement('optgroup'); 
-            group.label = gen;
+            let group = document.createElement('optgroup'); group.label = gen;
             GEN_DATA[gen].forEach(id => {
                 let o = dbOpt.find(opt => opt.id == id);
                 let name = o ? o.name.replace(/\$\((.*)\)/, '$1') : "Set " + id;
-                let opt = document.createElement('option');
-                opt.value = id;
-                opt.textContent = `${name} (ID: ${id})`;
-                group.appendChild(opt);
+                group.innerHTML += `<option value="${id}">${name} (ID: ${id})</option>`;
             });
             select.appendChild(group);
         }
     }
 
     function renderDefaultOptions() {
-        const container = document.getElementById('optionContainer'); 
-        container.innerHTML = "";
+        const container = document.getElementById('optionContainer'); container.innerHTML = "";
         addOptionRow(50, 100); addOptionRow(77, 100); addOptionRow(103, 100);
     }
 
-    // HÀM LỌC ĐÃ ĐƯỢC SỬA LẠI ĐỂ CHẠY CHUẨN
+    // HÀM HIỆN DANH SÁCH TRỰC TIẾP
     function filterItems() {
-        const searchInput = document.getElementById('searchItem');
-        const key = searchInput ? searchInput.value.toLowerCase() : "";
-        const list = document.getElementById('itemList'); 
-        if (!list) return;
-
+        const key = document.getElementById('searchItem').value.toLowerCase().trim();
+        const list = document.getElementById('itemList');
         list.innerHTML = "";
+
         const filtered = dbItem.filter(i => 
-            (i.name && i.name.toLowerCase().includes(key)) || 
-            (i.id && i.id.toString().includes(key))
-        ).slice(0, 150); // Hiện tối đa 150 món để không bị lag
-        
+            (i.name && i.name.toLowerCase().includes(key)) || (i.id && i.id.toString().includes(key))
+        ).slice(0, 100);
+
         filtered.forEach(i => {
-            let opt = document.createElement('option');
-            opt.value = i.id;
-            opt.textContent = `[ID:${i.id}] ${i.name}`;
-            list.appendChild(opt);
+            const div = document.createElement('div');
+            div.className = 'item-row';
+            if (selectedItemId == i.id) div.classList.add('selected');
+            div.textContent = `[ID:${i.id}] ${i.name}`;
+            div.onclick = function() {
+                selectedItemId = i.id;
+                document.querySelectorAll('.item-row').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+            };
+            list.appendChild(div);
         });
     }
 
     function addOptionRow(id = 0, val = 0) {
-        const div = document.createElement('div'); 
-        div.className = 'opt-row';
+        const div = document.createElement('div'); div.className = 'opt-row';
         let s = `<select class="opt-id">`;
-        dbOpt.forEach(o => { 
-            s += `<option value="${o.id}" ${o.id == id ? 'selected' : ''}>${o.name} (ID:${o.id})</option>`; 
-        });
+        dbOpt.forEach(o => { s += `<option value="${o.id}" ${o.id == id ? 'selected' : ''}>${o.name} (ID:${o.id})</option>`; });
         div.innerHTML = s + `</select><input type="number" class="opt-val" value="${val}">`;
         document.getElementById('optionContainer').appendChild(div);
     }
 
     function generate() {
-        const item = document.getElementById('itemList');
-        if (!item || item.selectedIndex === -1) return alert("Vui lòng chọn 1 món đồ trong danh sách!");
-        
+        if (!selectedItemId) return alert("Vui lòng chạm vào 1 món đồ trong danh sách!");
         let res = `${document.getElementById('clothesId').value}-0`;
         document.querySelectorAll('.opt-row').forEach(r => {
             res += ` ${r.querySelector('.opt-id').value}-${r.querySelector('.opt-val').value}`;
         });
-        document.getElementById('log').innerText += `Id ${item.value} (${res})\n\n`;
+        document.getElementById('log').innerText += `Id ${selectedItemId} (${res})\n\n`;
     }
 
     function copyLog() {
-        const log = document.getElementById('log');
-        navigator.clipboard.writeText(log.innerText);
-        alert("Đã copy lệnh!");
+        navigator.clipboard.writeText(document.getElementById('log').innerText);
+        alert("Đã copy!");
     }
 </script>
 </body>

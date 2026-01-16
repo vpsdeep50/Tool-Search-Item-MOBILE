@@ -3,50 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool NRO Mobile Optimized</title>
+    <title>Tool Item Option Mobile</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { --main: #00ff88; --bg: #0d0d0d; --card: #1a1a1a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; }
-        
-        /* Tối ưu Layout: Trên PC chia 2, trên Mobile xếp 1 cột */
-        .wrapper { 
-            max-width: 1400px; 
-            margin: auto; 
-            display: grid; 
-            grid-template-columns: 1fr; /* Mặc định 1 cột cho Mobile */
-            gap: 15px; 
-        }
-        
-        @media (min-width: 900px) {
-            .wrapper { grid-template-columns: 400px 1fr; } /* PC quay lại 2 cột */
-            body { padding: 20px; }
-        }
-
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 900px) { .wrapper { grid-template-columns: 400px 1fr; } body { padding: 20px; } }
         .panel { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
-        input, select { 
-            width: 100%; padding: 12px; background: #222; color: #fff; 
-            border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; 
-            box-sizing: border-box; font-size: 16px; /* Font 16px để Mobile không bị tự động zoom */
-        }
-        
-        .btn { 
-            width: 100%; padding: 15px; border: none; border-radius: 8px; 
-            font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; 
-        }
+        input, select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; }
         .btn-add { background: var(--main); color: #000; }
-        
-        /* Tối ưu khung Log cho Mobile */
-        #log { 
-            background: #000; color: #00ff41; padding: 12px; 
-            height: 350px; overflow-y: auto; font-family: 'Consolas', monospace; 
-            border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 13px;
-        }
-
-        @media (min-width: 900px) {
-            #log { height: 600px; }
-        }
-
+        #log { background: #000; color: #00ff41; padding: 12px; height: 350px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 13px; }
         .opt-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px; }
         label { font-size: 12px; color: #888; text-transform: uppercase; display: block; margin-top: 10px; font-weight: bold; }
         .loading-status { color: var(--main); font-size: 14px; margin-bottom: 15px; text-align: center; }
@@ -57,16 +25,17 @@
 <div class="wrapper">
     <div class="panel">
         <h2 style="color: var(--main); text-align: center; margin: 0 0 15px 0; font-size: 18px;">TOOL SEARCH NRO MOBILE</h2>
-        
-        <div id="status" class="loading-status">⏳ Đang nạp dữ liệu từ GitHub...</div>
+        <div id="status" class="loading-status">⏳ Đang nạp dữ liệu...</div>
 
         <div id="mainUI" style="display:none">
             <label>🔍 Tìm kiếm vật phẩm:</label>
             <input type="text" id="searchItem" placeholder="Gõ tên hoặc ID..." oninput="filterItems()">
             <select id="itemList" size="6" style="height: 150px;"></select>
 
-            <label>👕 Set Clothes (Dữ liệu Option):</label>
-            <select id="clothesId"></select>
+            <label>👕 Set Clothes (Kích Set):</label>
+            <select id="clothesId">
+                <option value="0">-- KHÔNG CHỌN SET (NONE) --</option>
+            </select>
 
             <label>⚙️ Chỉ số Option:</label>
             <div id="optionContainer"></div>
@@ -78,10 +47,10 @@
     </div>
 
     <div class="panel">
-        <h3 style="margin:0; color: var(--main); font-size: 14px;">COMMAND LIST (KẾT QUẢ)</h3>
+        <h3 style="margin:0; color: var(--main); font-size: 14px;">COMMAND LIST</h3>
         <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
         <div id="log">Đang đợi tải dữ liệu...</div>
-        <button onclick="document.getElementById('log').innerText=''" style="width:100%; background:none; border:none; color:#ff4444; font-size:12px; margin-top:10px; cursor:pointer;">[ Xóa danh sách ]</button>
+        <button onclick="document.getElementById('log').innerText=''" style="width:100%; background:none; border:none; color:#ff4444; font-size:12px; margin-top:10px;">[ Xóa danh sách ]</button>
     </div>
 </div>
 
@@ -89,19 +58,15 @@
     let dbItem = [];
     let dbOpt = [];
 
-    // Bộ ID kích set chuẩn từ file gốc của ông
     const GEN_DATA = {
         "G0 - TRÁI ĐẤT": [139, 140, 141],
         "G1 - NAMẾC": [142, 143, 144],
         "G2 - XAYDA": [136, 137, 138]
     };
 
-    window.onload = function() {
-        autoLoadFiles();
-    };
+    window.onload = function() { autoLoadFiles(); };
 
     function autoLoadFiles() {
-        // Tự động tìm file item.csv và option.csv cùng folder
         Papa.parse("item.csv", {
             download: true, header: true, skipEmptyLines: true,
             complete: function(res) {
@@ -128,7 +93,7 @@
 
     function checkReady() {
         if (dbItem.length > 0 && dbOpt.length > 0) {
-            document.getElementById('status').innerText = "✅ Đã nạp " + dbItem.length + " món đồ";
+            document.getElementById('status').innerText = "✅ Đã nạp dữ liệu!";
             document.getElementById('mainUI').style.display = 'block';
             document.getElementById('log').innerText = "";
             renderClothesMenu();
@@ -147,7 +112,7 @@
 
     function renderClothesMenu() {
         const select = document.getElementById('clothesId');
-        select.innerHTML = "";
+        // Không xóa option None đầu tiên
         for (let gen in GEN_DATA) {
             let group = document.createElement('optgroup');
             group.label = gen;
@@ -178,7 +143,7 @@
               .slice(0, 100).forEach(i => {
                   let opt = document.createElement('option');
                   opt.value = i.id;
-                  opt.textContent = `[ID:${i.id}] ${i.name} (G${i.g})`;
+                  opt.textContent = `[ID:${i.id}] ${i.name}`;
                   list.appendChild(opt);
               });
     }
@@ -198,25 +163,22 @@
 
     function generate() {
         const itemBox = document.getElementById('itemList');
-        if (itemBox.selectedIndex === -1) return alert("Vui lòng chọn 1 vật phẩm!");
+        if (itemBox.selectedIndex === -1) return alert("Chọn đồ!");
         const itemId = itemBox.value;
-        const itemName = itemBox.options[itemBox.selectedIndex].text;
         const clothesId = document.getElementById('clothesId').value;
-        const clothesName = document.getElementById('clothesId').options[document.getElementById('clothesId').selectedIndex].text;
+        
         let optString = `${clothesId}-0`;
         document.querySelectorAll('.opt-row').forEach(row => {
             const id = row.querySelector('.opt-id').value;
             const val = row.querySelector('.opt-val').value;
             if(id) optString += ` ${id}-${val}`;
         });
-        const log = document.getElementById('log');
-        log.innerText += `// ${itemName} | Set: ${clothesName}\nId ${itemId} (${optString})\n\n`;
-        log.scrollTop = log.scrollHeight;
+        document.getElementById('log').innerText += `Id ${itemId} (${optString})\n\n`;
     }
 
     function copyLog() {
         navigator.clipboard.writeText(document.getElementById('log').innerText);
-        alert("Đã copy lệnh vào bộ nhớ tạm!");
+        alert("Đã copy!");
     }
 </script>
 </body>

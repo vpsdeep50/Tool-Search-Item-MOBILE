@@ -2,124 +2,118 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool NRO Mobile - No Set Option</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NRO MOBILE TOOL FIX</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { --main: #00ff88; --bg: #0d0d0d; --card: #1a1a1a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; }
-        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 900px) { .wrapper { grid-template-columns: 400px 1fr; } body { padding: 20px; } }
+        .wrapper { max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 900px) { .wrapper { grid-template-columns: 420px 1fr; } body { padding: 20px; } }
         .panel { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
-        input, select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 5px; }
-        .btn-add { background: var(--main); color: #000; }
-        #log { background: #000; color: #00ff41; padding: 12px; height: 350px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 13px; }
-        .opt-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px; }
-        label { font-size: 12px; color: #888; text-transform: uppercase; display: block; margin-top: 10px; font-weight: bold; }
-        .loading-status { color: var(--main); font-size: 14px; margin-bottom: 15px; text-align: center; }
+        input, select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 8px; }
+        .btn-add { background: var(--main); color: #000; font-size: 16px; }
+        #log { background: #000; color: #00ff41; padding: 12px; height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; border-radius: 8px; white-space: pre-wrap; border: 1px solid #222; font-size: 14px; margin-top: 10px; }
+        .opt-row { display: grid; grid-template-columns: 2.2fr 1fr; gap: 8px; margin-bottom: 8px; }
+        label { font-size: 11px; color: var(--main); text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: bold; }
+        .status { text-align: center; color: var(--main); font-weight: bold; margin-bottom: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
     <div class="panel">
-        <h2 style="color: var(--main); text-align: center; margin: 0 0 15px 0; font-size: 18px;">TOOL SEARCH NRO MOBILE</h2>
-        <div id="status" class="loading-status">⏳ Đang nạp dữ liệu...</div>
+        <h2 style="color: var(--main); text-align: center; margin-top: 0;">NRO MOBILE TOOL</h2>
+        <div id="status" class="status">⏳ Đang nạp dữ liệu...</div>
 
-        <div id="mainUI" style="display:none">
-            <label>🔍 Tìm kiếm vật phẩm:</label>
-            <input type="text" id="searchItem" placeholder="Gõ tên hoặc ID..." oninput="filterItems()">
-            <select id="itemList" size="6" style="height: 150px;"></select>
+        <div id="mainUI">
+            <label>🔍 Tìm kiếm trang bị</label>
+            <input type="text" id="searchItem" placeholder="Gõ tên hoặc ID..." onkeyup="filterItems()">
+            
+            <label>📦 Danh sách đồ (Chọn 1 món):</label>
+            <select id="itemList" size="8" style="height: 200px;"></select>
 
-            <label>👕 Set Clothes (Kích Set):</label>
+            <label>👕 Set Clothes (Kích hoạt)</label>
             <select id="clothesId">
                 <option value="0">-- KHÔNG CHỌN SET (NONE) --</option>
             </select>
 
-            <label>⚙️ Chỉ số Option:</label>
+            <label>⚙️ Chỉ số Option</label>
             <div id="optionContainer"></div>
-            <button class="btn" style="background: #333; color: #ccc; font-size: 12px; height: 40px;" onclick="addOptionRow()">+ Thêm dòng chỉ số</button>
+            <button class="btn" style="background: #333; color: #ccc; font-size: 12px; padding: 8px;" onclick="addOptionRow()">+ THÊM DÒNG</button>
             
-            <button class="btn btn-add" style="margin-top: 20px;" onclick="generate()">TẠO LỆNH</button>
-            <button class="btn" style="background: #2980b9; color: #fff; margin-top: 10px;" onclick="copyLog()">COPY TOÀN BỘ</button>
+            <button class="btn btn-add" style="margin-top: 15px;" onclick="generate()">TẠO LỆNH</button>
+            <button class="btn" style="background: #2980b9; color: #fff;" onclick="copyLog()">COPY KẾT QUẢ</button>
         </div>
     </div>
 
     <div class="panel">
-        <h3 style="margin:0; color: var(--main); font-size: 14px;">COMMAND LIST</h3>
-        <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
-        <div id="log">Đang đợi tải dữ liệu...</div>
-        <button onclick="document.getElementById('log').innerText=''" style="width:100%; background:none; border:none; color:#ff4444; font-size:12px; margin-top:10px;">[ Xóa danh sách ]</button>
+        <label>KẾT QUẢ:</label>
+        <div id="log"></div>
+        <button onclick="document.getElementById('log').innerText=''" style="width:100%; background:none; border:none; color:#ff4444; font-size:11px; margin-top:10px;">XÓA TẤT CẢ</button>
     </div>
 </div>
 
 <script>
-    let dbItem = [];
+    let dbItem = []; 
     let dbOpt = [];
+    const GEN_DATA = { "G0 - TRÁI ĐẤT": [139, 140, 141], "G1 - NAMẾC": [142, 143, 144], "G2 - XAYDA": [136, 137, 138] };
 
-    const GEN_DATA = {
-        "G0 - TRÁI ĐẤT": [139, 140, 141],
-        "G1 - NAMẾC": [142, 143, 144],
-        "G2 - XAYDA": [136, 137, 138]
-    };
-
-    window.onload = function() { autoLoadFiles(); };
-
-    function autoLoadFiles() {
-        Papa.parse("item.csv", {
-            download: true, header: true, skipEmptyLines: true,
+    window.onload = function() {
+        // Tải item.csv
+        Papa.parse("item.csv", { 
+            download: true, 
+            header: true, 
+            skipEmptyLines: true, 
             complete: function(res) {
                 dbItem = res.data.map(i => ({
                     id: getVal(i, ['id', 'ID']),
-                    name: getVal(i, ['name', 'NAME']),
-                    g: getVal(i, ['gender', 'Gender'])
-                })).filter(i => i.id !== null);
+                    name: getVal(i, ['name', 'NAME'])
+                })).filter(i => i.id);
                 checkReady();
             }
         });
-
-        Papa.parse("option.csv", {
-            download: true, header: true, skipEmptyLines: true,
+        // Tải option.csv
+        Papa.parse("option.csv", { 
+            download: true, 
+            header: true, 
+            skipEmptyLines: true, 
             complete: function(res) {
                 dbOpt = res.data.map(i => ({
                     id: getVal(i, ['id', 'ID']),
                     name: getVal(i, ['name', 'NAME'])
-                })).filter(o => o.id !== null);
+                })).filter(o => o.id);
                 checkReady();
             }
         });
-    }
+    };
 
     function checkReady() {
         if (dbItem.length > 0 && dbOpt.length > 0) {
-            document.getElementById('status').innerText = "✅ Đã nạp dữ liệu!";
-            document.getElementById('mainUI').style.display = 'block';
-            document.getElementById('log').innerText = "";
-            renderClothesMenu();
-            renderDefaultOptions();
-            filterItems();
+            document.getElementById('status').innerText = "✅ ĐÃ NẠP " + dbItem.length + " MÓN";
+            renderClothesMenu(); 
+            renderDefaultOptions(); 
+            filterItems(); // Hiện danh sách ngay khi tải xong
         }
     }
 
     function getVal(obj, keys) {
         for (let key of keys) {
-            let foundKey = Object.keys(obj).find(k => k.toLowerCase().trim() === key.toLowerCase());
-            if (foundKey && obj[foundKey] !== undefined) return obj[foundKey].toString().replace(/"/g, '').trim();
+            let found = Object.keys(obj).find(k => k.toLowerCase().trim() === key.toLowerCase());
+            if (found) return obj[found].toString().replace(/"/g, '').trim();
         }
         return null;
     }
 
     function renderClothesMenu() {
         const select = document.getElementById('clothesId');
-        // Không xóa option None đầu tiên
         for (let gen in GEN_DATA) {
-            let group = document.createElement('optgroup');
+            let group = document.createElement('optgroup'); 
             group.label = gen;
             GEN_DATA[gen].forEach(id => {
-                let optObj = dbOpt.find(o => o.id == id);
-                let name = optObj ? optObj.name : "Option " + id;
-                name = name.replace(/\$\((.*)\)/, '$1');
+                let o = dbOpt.find(opt => opt.id == id);
+                let name = o ? o.name.replace(/\$\((.*)\)/, '$1') : "Set " + id;
                 let opt = document.createElement('option');
                 opt.value = id;
                 opt.textContent = `${name} (ID: ${id})`;
@@ -130,55 +124,58 @@
     }
 
     function renderDefaultOptions() {
-        const container = document.getElementById('optionContainer');
+        const container = document.getElementById('optionContainer'); 
         container.innerHTML = "";
         addOptionRow(50, 100); addOptionRow(77, 100); addOptionRow(103, 100);
     }
 
+    // HÀM LỌC ĐÃ ĐƯỢC SỬA LẠI ĐỂ CHẠY CHUẨN
     function filterItems() {
-        const key = document.getElementById('searchItem').value.toLowerCase();
-        const list = document.getElementById('itemList');
+        const searchInput = document.getElementById('searchItem');
+        const key = searchInput ? searchInput.value.toLowerCase() : "";
+        const list = document.getElementById('itemList'); 
+        if (!list) return;
+
         list.innerHTML = "";
-        dbItem.filter(i => i.name.toLowerCase().includes(key) || i.id.includes(key))
-              .slice(0, 100).forEach(i => {
-                  let opt = document.createElement('option');
-                  opt.value = i.id;
-                  opt.textContent = `[ID:${i.id}] ${i.name}`;
-                  list.appendChild(opt);
-              });
+        const filtered = dbItem.filter(i => 
+            (i.name && i.name.toLowerCase().includes(key)) || 
+            (i.id && i.id.toString().includes(key))
+        ).slice(0, 150); // Hiện tối đa 150 món để không bị lag
+        
+        filtered.forEach(i => {
+            let opt = document.createElement('option');
+            opt.value = i.id;
+            opt.textContent = `[ID:${i.id}] ${i.name}`;
+            list.appendChild(opt);
+        });
     }
 
-    function addOptionRow(defaultId = 0, defaultVal = 0) {
-        const container = document.getElementById('optionContainer');
-        const div = document.createElement('div');
+    function addOptionRow(id = 0, val = 0) {
+        const div = document.createElement('div'); 
         div.className = 'opt-row';
-        let selectHtml = `<select class="opt-id">`;
-        dbOpt.forEach(o => {
-            selectHtml += `<option value="${o.id}" ${o.id == defaultId ? 'selected' : ''}>${o.name} (ID:${o.id})</option>`;
+        let s = `<select class="opt-id">`;
+        dbOpt.forEach(o => { 
+            s += `<option value="${o.id}" ${o.id == id ? 'selected' : ''}>${o.name} (ID:${o.id})</option>`; 
         });
-        selectHtml += `</select>`;
-        div.innerHTML = `${selectHtml}<input type="number" class="opt-val" value="${defaultVal}">`;
-        container.appendChild(div);
+        div.innerHTML = s + `</select><input type="number" class="opt-val" value="${val}">`;
+        document.getElementById('optionContainer').appendChild(div);
     }
 
     function generate() {
-        const itemBox = document.getElementById('itemList');
-        if (itemBox.selectedIndex === -1) return alert("Chọn đồ!");
-        const itemId = itemBox.value;
-        const clothesId = document.getElementById('clothesId').value;
+        const item = document.getElementById('itemList');
+        if (!item || item.selectedIndex === -1) return alert("Vui lòng chọn 1 món đồ trong danh sách!");
         
-        let optString = `${clothesId}-0`;
-        document.querySelectorAll('.opt-row').forEach(row => {
-            const id = row.querySelector('.opt-id').value;
-            const val = row.querySelector('.opt-val').value;
-            if(id) optString += ` ${id}-${val}`;
+        let res = `${document.getElementById('clothesId').value}-0`;
+        document.querySelectorAll('.opt-row').forEach(r => {
+            res += ` ${r.querySelector('.opt-id').value}-${r.querySelector('.opt-val').value}`;
         });
-        document.getElementById('log').innerText += `Id ${itemId} (${optString})\n\n`;
+        document.getElementById('log').innerText += `Id ${item.value} (${res})\n\n`;
     }
 
     function copyLog() {
-        navigator.clipboard.writeText(document.getElementById('log').innerText);
-        alert("Đã copy!");
+        const log = document.getElementById('log');
+        navigator.clipboard.writeText(log.innerText);
+        alert("Đã copy lệnh!");
     }
 </script>
 </body>
